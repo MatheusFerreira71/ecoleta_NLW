@@ -10,6 +10,7 @@ import { UF } from '../../UF';
 import axios from 'axios';
 import { Cidade } from '../../Cidade';
 import { LeafletMouseEvent } from 'leaflet'
+import Swal from 'sweetalert2'
 
 const CreatePoint = () => {
     const [items, setItems] = useState<Item[]>([]);
@@ -71,8 +72,13 @@ const CreatePoint = () => {
             items: selectedItems
         }
         await api.post('points', data);
-        alert('Ponto de Coleta Criado');
-        history.push('/');
+        Swal.fire(
+            'Parabéns',
+            'Ponto de coleta criado com sucesso!',
+            'success'
+        ).then(() => {
+            history.push('/');
+        })
     }
 
     const history = useHistory();
