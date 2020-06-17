@@ -18,6 +18,7 @@ const CreatePoint = () => {
     const [selectedUf, setSelectedUf] = useState('0');
     const [cities, setCities] = useState<string[]>([]);
     const [selectedCity, setSelectedCity] = useState('0');
+    const [buttonEnabler, setButtonEnabler] = useState(true);
     const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0, 0]);
     const [initialPosition, setInitialPosition] = useState<[number, number]>([0, 0]);
     const [formData, setFormData] = useState({
@@ -26,6 +27,14 @@ const CreatePoint = () => {
         whatsapp: ''
     })
     const [selectedItems, setSelectedItems] = useState<number[]>([])
+
+    useEffect(() => {
+        if(selectedPosition[0] !== 0 && selectedPosition[0] && selectedItems.length > 0) {
+            setButtonEnabler(false);
+        } else {
+            setButtonEnabler(true);
+        }
+    }, [selectedPosition, selectedItems]);
 
     function handleSelectUf(event: ChangeEvent<HTMLSelectElement>) {
         setSelectedUf(event.target.value);
@@ -101,14 +110,14 @@ const CreatePoint = () => {
     useEffect(() => {
         axios.get<UF[]>('https://servicodados.ibge.gov.br/api/v1/localidades/estados').then(response => {
             const ufInitials = response.data.map(initial => initial.sigla);
-            setUfs(ufInitials);
+            setUfs(ufInitials.sort());
         })
     }, []);
 
     useEffect(() => {
         axios.get<Cidade[]>(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectedUf}/municipios`).then(response => {
             const ufCities = response.data.map(city => city.nome);
-            setCities(ufCities);
+            setCities(ufCities.sort());
         })
     }, [selectedUf]);
 
@@ -134,6 +143,7 @@ const CreatePoint = () => {
                             name="name"
                             id="name"
                             onChange={handleInputChange}
+                            required
                         />
                     </div>
                     <div className="field-group">
@@ -144,6 +154,7 @@ const CreatePoint = () => {
                                 name="email"
                                 id="email"
                                 onChange={handleInputChange}
+                                required
                             />
                         </div>
                         <div className="field">
@@ -153,6 +164,7 @@ const CreatePoint = () => {
                                 name="whatsapp"
                                 id="whatsapp"
                                 onChange={handleInputChange}
+                                required
                             />
                         </div>
                     </div>
@@ -174,8 +186,8 @@ const CreatePoint = () => {
                     <div className="field-group">
                         <div className="field">
                             <label htmlFor="uf">Estado (UF)</label>
-                            <select value={selectedUf} onChange={handleSelectUf} name="uf" id="uf">
-                                <option value="0">Selecione uma UF</option>
+                            <select value={selectedUf} onChange={handleSelectUf} name="uf" id="uf" required>
+                                <option value="">Selecione uma UF</option>
                                 {ufs.map(uf => (
                                     <option key={uf} value={uf}>{uf}</option>
                                 ))}
@@ -183,8 +195,8 @@ const CreatePoint = () => {
                         </div>
                         <div className="field">
                             <label htmlFor="city">Cidade</label>
-                            <select name="city" id="city" onChange={handleSelectCity} value={selectedCity}>
-                                <option value="0">Selecione uma cidade</option>
+                            <select name="city" id="city" onChange={handleSelectCity} value={selectedCity} required>
+                                <option value="">Selecione uma cidade</option>
                                 {cities.map(city => (
                                     <option key={city} value={city}>{city}</option>
                                 ))}
@@ -210,7 +222,7 @@ const CreatePoint = () => {
                             </li>))}
                     </ul>
                 </fieldset>
-                <button type="submit">
+                <button type="submit" disabled={buttonEnabler}>
                     Cadastrar Ponto de Coleta
                 </button>
             </form>

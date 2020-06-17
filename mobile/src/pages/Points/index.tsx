@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, ScrollView, Image, SafeAreaView, Alert } from 'react-native';
 import { Feather as Icon } from '@expo/vector-icons'
 import Constants from 'expo-constants';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import MapView, { Marker } from 'react-native-maps';
 import { SvgUri } from 'react-native-svg';
 import api from '../../services/api';
@@ -10,11 +10,18 @@ import { Item } from '../../Item';
 import * as Location from 'expo-location'
 import { Point } from '../../Point';
 
+interface Params {
+    uf: string,
+    city: string
+}
+
 const Points = () => {
+    const route = useRoute();
+    const { city, uf } = route.params as Params;
     const navigation = useNavigation();
 
     const [items, setItems] = useState<Item[]>([]);
-    const [selectedItems, setSelectedItems] = useState<number[]>([]);
+    const [selectedItems, setSelectedItems] = useState<number[]>([1, 2, 3, 4, 5, 6]);
     const [initialPosition, setInitialPosition] = useState<[number, number]>([0, 0]);
     const [points, setPoints] = useState<Point[]>([]);
 
@@ -27,7 +34,7 @@ const Points = () => {
 
     //initialPosition
     useEffect(() => {
-        async function loadPosition () {
+        async function loadPosition() {
             const { status } = await Location.requestPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert('Oooops', 'Precisamos de sua permissão para obter a localização');
@@ -39,7 +46,7 @@ const Points = () => {
                 const { latitude, longitude } = location.coords;
 
                 setInitialPosition([latitude, longitude]);
-            } catch(error) {
+            } catch (error) {
                 return;
             }
         };
@@ -51,20 +58,20 @@ const Points = () => {
     useEffect(() => {
         api.get('points', {
             params: {
-                city: 'Franca',
-                uf: 'SP',
-                items: [1,2,3,4,5,6]
+                city,
+                uf,
+                items: selectedItems
             }
         }).then(response => {
             setPoints(response.data);
         })
-    }, []);
+    }, [selectedItems]);
 
     function handleNavigateBack() {
         navigation.goBack();
     };
 
-    function handleNavigateToDetail (id: number) {
+    function handleNavigateToDetail(id: number) {
         navigation.navigate('Detail', {
             point_id: id
         });
@@ -90,7 +97,7 @@ const Points = () => {
                 <Text style={styles.description}>Encontre no mapa um ponto de coleta.</Text>
 
                 <View style={styles.mapContainer}>
-                    { initialPosition[0] !== 0 && (
+                    {initialPosition[0] !== 0 && (
                         <MapView
                             style={styles.map}
                             initialRegion={{
@@ -120,7 +127,7 @@ const Points = () => {
                                 </Marker>
                             ))}
                         </MapView>
-                    ) }
+                    )}
                 </View>
             </View>
             <View style={styles.itemsContainer}>
@@ -136,8 +143,8 @@ const Points = () => {
                                 styles.item,
                                 selectedItems.includes(item.id) ? styles.selectedItem : {}
                             ]}
-                            onPress={ () =>  handleSelectItem(item.id) }
-                            activeOpacity={ 0.6 }
+                            onPress={() => handleSelectItem(item.id)}
+                            activeOpacity={0.6}
                         >
                             <SvgUri width={42} height={42} uri={item.image_url} />
                             <Text style={styles.itemTitle}>{item.title}</Text>
