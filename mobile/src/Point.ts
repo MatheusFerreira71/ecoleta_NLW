@@ -7,6 +7,7 @@ export interface Point {
     name: string,
     email: string,
     image: string,
+    image_url: string,
     whatsapp: string,
     latitude: number,
     longitude: number,

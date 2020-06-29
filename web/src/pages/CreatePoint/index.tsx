@@ -11,6 +11,7 @@ import axios from 'axios';
 import { Cidade } from '../../Cidade';
 import { LeafletMouseEvent } from 'leaflet'
 import Swal from 'sweetalert2'
+import Dropzone from '../../components/Dropzone/';
 
 const CreatePoint = () => {
     const [items, setItems] = useState<Item[]>([]);
@@ -26,15 +27,16 @@ const CreatePoint = () => {
         email: '',
         whatsapp: ''
     })
-    const [selectedItems, setSelectedItems] = useState<number[]>([])
+    const [selectedItems, setSelectedItems] = useState<number[]>([]);
+    const [selectedFile, setSelectedFile] = useState<File>();
 
     useEffect(() => {
-        if(selectedPosition[0] !== 0 && selectedPosition[0] && selectedItems.length > 0) {
+        if (selectedPosition[0] !== 0 && selectedPosition[0] && selectedItems.length > 0 && selectedFile !== undefined) {
             setButtonEnabler(false);
         } else {
             setButtonEnabler(true);
         }
-    }, [selectedPosition, selectedItems]);
+    }, [selectedPosition, selectedItems, selectedFile]);
 
     function handleSelectUf(event: ChangeEvent<HTMLSelectElement>) {
         setSelectedUf(event.target.value);
@@ -66,20 +68,29 @@ const CreatePoint = () => {
         }
     }
 
-    async function handleSubmit (event: FormEvent) {
+    async function handleSubmit(event: FormEvent) {
         event.preventDefault();
         const { name, email, whatsapp } = formData;
-        const [ latitude, longitude ] = selectedPosition;
-        const data = {
-            name,
-            email,
-            whatsapp,
-            latitude,
-            longitude,
-            city: selectedCity,
-            uf: selectedUf,
-            items: selectedItems
+        const [latitude, longitude] = selectedPosition;
+
+        const data = new FormData();
+        const city = selectedCity;
+        const uf = selectedUf;
+        const items = selectedItems;
+
+        data.append('name', name);
+        data.append('email', email);
+        data.append('whatsapp', whatsapp);
+        data.append('latitude', String(latitude));
+        data.append('longitude', String(longitude));
+        data.append('city', city);
+        data.append('uf', uf);
+        data.append('items', items.join(','));
+
+        if (selectedFile) {
+            data.append('image', selectedFile);
         }
+
         await api.post('points', data);
         Swal.fire(
             'Parabéns',
@@ -132,6 +143,7 @@ const CreatePoint = () => {
             </header>
             <form onSubmit={handleSubmit}>
                 <h1>Cadastro do <br /> ponto de coleta</h1>
+                <Dropzone onFileUploaded={setSelectedFile} />
                 <fieldset>
                     <legend>
                         <h2>Dados</h2>
@@ -212,10 +224,10 @@ const CreatePoint = () => {
                     </legend>
                     <ul className="items-grid">
                         {items.map(item => (
-                            <li 
-                            onClick={() => handleSelectItem(item.id)}
-                            className={selectedItems.includes(item.id) ? 'selected' : ''}
-                            key={item.id}
+                            <li
+                                onClick={() => handleSelectItem(item.id)}
+                                className={selectedItems.includes(item.id) ? 'selected' : ''}
+                                key={item.id}
                             >
                                 <img src={item.image_url} alt={item.title} />
                                 <span>{item.title}</span>
